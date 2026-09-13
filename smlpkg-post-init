@@ -4,7 +4,9 @@
 # Use this right after `smlpkg init foo/bar/baz` to
 # generate a barebones project structure with a failing test case.
 
-# shellcheck disable=SC2016# We want to print $(VARS) verbatim
+# shellcheck disable=SC2016
+# We want to print $(VARS) verbatim
+VERSION=2026-09-13T18:02
 set -e
 
 PKGNAME=$(awk '/package/ { print $2}' ./sml.pkg)
@@ -99,12 +101,13 @@ link_test_dir () {
 
 emit_help () {
   printf "\nUsage:\n
-smlpkg-post-init -g\t\tcreate .gitignore
-smlpkg-post-init -l\t\tset up local files only (no network)
-smlpkg-post-init -h\t\tprint this help
-smlpkg-post-init   \t\trun full post-init generator
+smlpkg-post-init -g\t\tOnly create .gitignore
+smlpkg-post-init -l\t\tSet up local files only (no sync over network)
+smlpkg-post-init -h\t\tPrint this help
+smlpkg-post-init   \t\tRun full post-init generator
 
-" 1>&2
+smlpkg-post-init version: %s
+" "${VERSION}" 1>&2
 }
 
 
