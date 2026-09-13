@@ -1,0 +1,134 @@
+#!/bin/sh
+# -*- mode: sh ; -*-
+# Copyright 2026 Simon Zelazny (pzel)
+# Use this right after `smlpkg init foo/bar/baz` to
+# generate a barebones project structure with a failing test case.
+
+set -e
+
+PKGNAME=$(awk '/package/ { print $2}' ./sml.pkg)
+SHORTNAME=$(echo "$PKGNAME" | awk -F / '{print $NF}')
+D="lib/${PKGNAME}"
+
+mkdir -p "${D}/test"
+mkdir -p bin
+
+emit_main_mlb () {
+  printf '$(SML_LIB)/basis/basis.mlb
+%s.sml
+' "${SHORTNAME}" > "${D}/${SHORTNAME}.mlb"
+}
+
+emit_gitignore () {
+  printf 'bin/*\nlib/*\n' > .gitignore
+  printf "${D}" | awk -F/ '
+{ p=$1; for (i=2;i<NF+1;i++) {
+  p=(p "/" $i);
+  print "!"p"/";
+  if (i==NF) print "!"p"/**"
+  else  print p"/*"
+}}' >> .gitignore
+}
+
+emit_main_sml () {
+  touch "${D}/${SHORTNAME}.sml"
+  touch "${D}/${SHORTNAME}.sig"
+}
+
+emit_test_mlb () {
+  printf '$(SML_LIB)/basis/basis.mlb
+$(SMLPKG)/github.com/pzel/assert/assert.mlb
+../%s.mlb
+test.sml
+../call-main.sml
+' "${SHORTNAME}" > "${D}/test/test.mlb"
+}
+
+emit_test_sml () {
+  printf 'fun main () =
+	runTestsWith [T (fn _=> fail "implement me")] (CommandLine.arguments())
+' > "${D}/test/test.sml"
+}
+
+emit_call_main () {
+  printf 'val _ = main ()' > "${D}/call-main.sml"
+}
+
+emit_makefile () {
+  printf '
+LIBDIR := %s
+MLCOMP ?= polymlb
+SMLPKG_PATH := -mlb-path-var \042SMLPKG $(shell pwd)/lib\042
+
+ifeq ($(MLCOMP), polymlb)
+MLCOMP_FLAGS=-ann \042ignoreFiles call-main.sml\042
+POLY_PATH := -mlb-path-var \042POLY \$$(SML_LIB)/basis/\042
+else
+POLY_PATH := -mlb-path-var \042POLY \$$(SMLPKG)/github.com/pzel/polyml-fill/\042
+endif
+
+.PHONY: all
+all:	 test
+
+.PHONY: clean
+clean:
+	-@rm -f bin/*
+
+.PHONY: test
+test: bin/test
+	./$<
+
+COMP := $(MLCOMP) $(MLCOMP_FLAGS) $(SMLPKG_PATH) $(POLY_PATH) -output
+
+bin/test: $(shell find $(LIBDIR))
+	$(COMP) $@ $(LIBDIR)/test/test.mlb
+
+' "lib/${PKGNAME}"  > Makefile
+}
+
+link_src_dir () {
+  rm -f src
+  ln -s "${D}" src
+}
+
+link_test_dir () {
+  rm -f test
+  ln -s "${D}/test" test
+}
+
+emit_help () {
+  printf "\nUsage:\n
+smlpkg-post-init -g\t\tcreate .gitignore
+smlpkg-post-init -l\t\tset up local files only (no network)
+smlpkg-post-init -h\t\tprint this help
+smlpkg-post-init   \t\trun full post-init generator
+
+" 1>&2
+}
+
+
+setup_local_files () {
+  emit_gitignore
+  emit_main_mlb
+  emit_test_mlb
+  emit_main_sml
+  emit_test_sml
+  emit_call_main
+  emit_makefile
+}
+
+run_all () {
+  setup_local_files
+  smlpkg add github.com/pzel/assert
+  smlpkg add github.com/pzel/polyml-fill
+  smlpkg sync
+  link_src_dir
+  link_test_dir
+}
+
+case "$1" in
+  "-g") emit_gitignore ;;
+  "-l") setup_local_files ;;
+  "-h") emit_help ;;
+  *) run_all ;;
+esac
