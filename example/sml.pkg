@@ -1,0 +1,6 @@
+package github.com/example-user/example-project
+
+require {
+  github.com/pzel/assert 0.10.0 #117554f83f5d49448922d9216ba28fe863704d9e
+  github.com/pzel/polyml-fill 0.1.0 #01c9fbe5d3a846c4930db770381f80cf31e7fff3
+}

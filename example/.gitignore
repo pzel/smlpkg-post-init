@@ -1,0 +1,8 @@
+bin/*
+lib/*
+!lib/github.com/
+lib/github.com/*
+!lib/github.com/example-user/
+lib/github.com/example-user/*
+!lib/github.com/example-user/example-project/
+!lib/github.com/example-user/example-project/**

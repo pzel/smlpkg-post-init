@@ -8,3 +8,12 @@ install:
 .PHONY: check
 check:
 	shellcheck ./smlpkg-post-init
+
+
+example: smlpkg-post-init
+	(rm -rf $@\
+	&& mkdir $@\
+	&& cd $@\
+	&& smlpkg init github.com/example-user/example-project\
+	&& smlpkg-post-init)
+

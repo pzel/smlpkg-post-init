@@ -63,3 +63,7 @@ TESTS FAILED: 1/1
 
 make: *** [Makefile:22: test] Error 1
 ```
+
+## Example
+
+See [./example] to see how the generated project looks.
