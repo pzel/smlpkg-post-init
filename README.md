@@ -66,4 +66,4 @@ make: *** [Makefile:22: test] Error 1
 
 ## Example
 
-See [./example] to see how the generated project looks.
+See [the example directory](example) to see what the generated project looks like.
