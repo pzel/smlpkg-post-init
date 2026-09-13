@@ -4,6 +4,7 @@
 # Use this right after `smlpkg init foo/bar/baz` to
 # generate a barebones project structure with a failing test case.
 
+# shellcheck disable=SC2016# We want to print $(VARS) verbatim
 set -e
 
 PKGNAME=$(awk '/package/ { print $2}' ./sml.pkg)
@@ -21,7 +22,7 @@ emit_main_mlb () {
 
 emit_gitignore () {
   printf 'bin/*\nlib/*\n' > .gitignore
-  printf "${D}" | awk -F/ '
+  printf "%s" "${D}" | awk -F/ '
 { p=$1; for (i=2;i<NF+1;i++) {
   p=(p "/" $i);
   print "!"p"/";
