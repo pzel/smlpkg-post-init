@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2016
 # We want to print $(VARS) verbatim
-VERSION=2026-09-13T18:23
+VERSION=2026-10-07T15:51
 set -e
 
 PKGNAME=$(awk '/package/ { print $2}' ./sml.pkg)
@@ -64,7 +64,7 @@ MLCOMP ?= polymlb
 SMLPKG_PATH := -mlb-path-var \042SMLPKG $(shell pwd)/lib\042
 
 ifeq ($(MLCOMP), polymlb)
-MLCOMP_FLAGS=-ann \042ignoreFiles call-main.sml\042
+MLCOMP_FLAGS=-default-ann \042ignoreFiles call-main.sml\042
 POLY_PATH := -mlb-path-var \042POLY \$$(SML_LIB)/basis/\042
 else
 POLY_PATH := -mlb-path-var \042POLY \$$(SMLPKG)/github.com/pzel/polyml-fill/\042
