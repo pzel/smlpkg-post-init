@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2016
 # We want to print $(VARS) verbatim
-VERSION=2026-10-10T09:51
+VERSION=2026-10-10T09:58
 set -e
 
 PKGNAME=$(awk '/package/ { print $2}' ./sml.pkg)
@@ -73,7 +73,7 @@ SMLPKG_PATH := -mlb-path-var \042SMLPKG $(shell pwd)/lib\042
 MAIN_MLB=$(LIBDIR)/%s.mlb
 
 ifeq ($(MLCOMP), polymlb)
-MLCOMP_FLAGS=
+MLCOMP_FLAGS=-default-ann \042ignoreFiles call-main.sml\042
 POLY_PATH := -mlb-path-var \042POLY \$$(SML_LIB)/basis/\042
 else
 MLCOMP_FLAGS=-default-ann \042allowRecordPunExps true\042
