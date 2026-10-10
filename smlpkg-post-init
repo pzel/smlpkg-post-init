@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2016
 # We want to print $(VARS) verbatim
-VERSION=2026-10-07T15:51
+VERSION=2026-10-10T09:51
 set -e
 
 PKGNAME=$(awk '/package/ { print $2}' ./sml.pkg)
@@ -20,6 +20,12 @@ emit_main_mlb () {
   printf '$(SML_LIB)/basis/basis.mlb
 %s.sml
 ' "${SHORTNAME}" > "${D}/${SHORTNAME}.mlb"
+}
+
+emit_call_main_mlb () {
+  printf '%s.mlb
+call-main.sml
+' "${SHORTNAME}" > "${D}/call-main.mlb"
 }
 
 emit_gitignore () {
@@ -36,6 +42,8 @@ emit_gitignore () {
 emit_main_sml () {
   touch "${D}/${SHORTNAME}.sml"
   touch "${D}/${SHORTNAME}.sig"
+  printf 'fun main () = print "hello, %s\\n";\n' "${SHORTNAME}" \
+         > "${D}/${SHORTNAME}.sml"
 }
 
 emit_test_mlb () {
@@ -62,16 +70,18 @@ emit_makefile () {
 LIBDIR := %s
 MLCOMP ?= polymlb
 SMLPKG_PATH := -mlb-path-var \042SMLPKG $(shell pwd)/lib\042
+MAIN_MLB=$(LIBDIR)/%s.mlb
 
 ifeq ($(MLCOMP), polymlb)
-MLCOMP_FLAGS=-default-ann \042ignoreFiles call-main.sml\042
+MLCOMP_FLAGS=
 POLY_PATH := -mlb-path-var \042POLY \$$(SML_LIB)/basis/\042
 else
+MLCOMP_FLAGS=-default-ann \042allowRecordPunExps true\042
 POLY_PATH := -mlb-path-var \042POLY \$$(SMLPKG)/github.com/pzel/polyml-fill/\042
+MAIN_MLB=$(LIBDIR)/call-main.mlb
 endif
 
 COMP := $(MLCOMP) $(MLCOMP_FLAGS) $(SMLPKG_PATH) $(POLY_PATH) -output
-
 
 .PHONY: all
 all:	 test
@@ -84,10 +94,18 @@ clean:
 test: bin/test
 	./$<
 
+.PHONY: repl
+repl:
+	polymlb-repl $(MAIN_MLB)
+
 bin/test: $(shell find $(LIBDIR))
 	$(COMP) $@ $(LIBDIR)/test/test.mlb
 
-' "${VERSION}" "lib/${PKGNAME}"  > Makefile
+bin/%s: bin $(shell find $(LIBDIR))
+	$(COMP) $@ $(MAIN_MLB)
+
+
+' "${VERSION}" "lib/${PKGNAME}" "${SHORTNAME}" "${SHORTNAME}" > Makefile
 }
 
 link_src_dir () {
@@ -111,7 +129,6 @@ smlpkg-post-init version: %s
 " "${VERSION}" 1>&2
 }
 
-
 setup_local_files () {
   emit_gitignore
   emit_main_mlb
@@ -119,6 +136,7 @@ setup_local_files () {
   emit_main_sml
   emit_test_sml
   emit_call_main
+  emit_call_main_mlb
   emit_makefile
 }
 
@@ -135,5 +153,6 @@ case "$1" in
   "-g") emit_gitignore ;;
   "-l") setup_local_files ;;
   "-h") emit_help ;;
+  "--help") emit_help ;;
   *) run_all ;;
 esac

@@ -1,0 +1,27 @@
+#!/bin/bash
+# shellcheck disable=SC2155
+set -ex
+VERSION=2026-10-10T09:51
+
+export SML_LIB=$(polymlb -sml-lib)
+export SMLPKG="$(pwd)/lib"
+export POLY="${SML_LIB}/basis"
+
+CODE=""
+
+printf -v CODE '
+PolyML.use "%s/polymlb/build.sml";
+open PolyMLB;
+HashArray.update (PolyMLB.pathMap, "SML_LIB", "%s");
+HashArray.update (PolyMLB.pathMap, "SMLPKG", "%s");
+HashArray.update (PolyMLB.pathMap, "POLY", "%s");
+use "%s";
+
+' \
+       "${SML_LIB}" \
+       "${SML_LIB}" \
+       "${SMLPKG}" \
+       "${POLY}" \
+       "$1"
+
+poly -i --eval "${CODE}"
